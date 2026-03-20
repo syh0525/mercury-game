@@ -132,6 +132,18 @@ def get_sun(month, day):
         if month == nm and day < nd: return SIGNS[si]
     return 'aries'
 
+def build_history(messages):
+    """确保对话历史格式正确：user/assistant 交替，第一条必须是 user"""
+    result = []
+    for msg in messages:
+        if result and result[-1]['role'] == msg['role']:
+            result[-1]['content'] += '\n' + msg['content']
+        else:
+            result.append({'role': msg['role'], 'content': msg['content']})
+    if not result or result[0]['role'] != 'user':
+        result = [{'role': 'user', 'content': '你好'}] + result
+    return result
+
 st.title("🪐 社交练习伙伴")
 st.caption("输入对方生日，解析水星星座，模拟 Ta 的思维方式和你互动练习")
 
@@ -175,6 +187,7 @@ if start_btn:
 
 if st.session_state.char_setup:
     setup = st.session_state.char_setup
+
     with st.expander("星盘解析", expanded=False):
         col1, col2 = st.columns(2)
         with col1:
@@ -190,7 +203,7 @@ if st.session_state.char_setup:
         with st.chat_message(msg['role']):
             st.write(msg['content'])
 
-    user_input = st.chat_input("说点什么…")
+    user_input = st.chat_input("和 " + setup['name'] + " 说点什么…")
     if user_input:
         st.session_state.messages.append({'role': 'user', 'content': user_input})
         with st.chat_message('user'):
@@ -210,15 +223,7 @@ if st.session_state.char_setup:
             st.error("请先在 Secrets 里设置 ANTHROPIC_API_KEY")
         else:
             client = anthropic.Anthropic(api_key=api_key)
-           raw = [{'role': m['role'], 'content': m['content']} for m in st.session_state.messages]
-history = []
-for msg in raw:
-    if history and history[-1]['role'] == msg['role']:
-        history[-1]['content'] += '\n' + msg['content']
-    else:
-        history.append(msg)
-if not history or history[0]['role'] != 'user':
-    history = [{'role': 'user', 'content': '你好'}] + history
+            history = build_history(st.session_state.messages)
             with st.spinner(""):
                 response = client.messages.create(
                     model="claude-sonnet-4-20250514",
