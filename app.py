@@ -210,7 +210,15 @@ if st.session_state.char_setup:
             st.error("请先在 Secrets 里设置 ANTHROPIC_API_KEY")
         else:
             client = anthropic.Anthropic(api_key=api_key)
-            history = [{'role': m['role'], 'content': m['content']} for m in st.session_state.messages]
+           raw = [{'role': m['role'], 'content': m['content']} for m in st.session_state.messages]
+history = []
+for msg in raw:
+    if history and history[-1]['role'] == msg['role']:
+        history[-1]['content'] += '\n' + msg['content']
+    else:
+        history.append(msg)
+if not history or history[0]['role'] != 'user':
+    history = [{'role': 'user', 'content': '你好'}] + history
             with st.spinner(""):
                 response = client.messages.create(
                     model="claude-sonnet-4-20250514",
