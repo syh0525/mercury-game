@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import streamlit as st
-import anthropic
+import google.generativeai as genai
 
 st.set_page_config(page_title="社交练习伙伴", page_icon="🪐", layout="centered")
 
@@ -132,18 +132,6 @@ def get_sun(month, day):
         if month == nm and day < nd: return SIGNS[si]
     return 'aries'
 
-def build_history(messages):
-    """确保对话历史格式正确：user/assistant 交替，第一条必须是 user"""
-    result = []
-    for msg in messages:
-        if result and result[-1]['role'] == msg['role']:
-            result[-1]['content'] += '\n' + msg['content']
-        else:
-            result.append({'role': msg['role'], 'content': msg['content']})
-    if not result or result[0]['role'] != 'user':
-        result = [{'role': 'user', 'content': '你好'}] + result
-    return result
-
 st.title("🪐 社交练习伙伴")
 st.caption("输入对方生日，解析水星星座，模拟 Ta 的思维方式和你互动练习")
 
@@ -218,22 +206,26 @@ if st.session_state.char_setup:
             "规则：严格用水星" + setup['mercury_name'] + "的风格说话；只输出角色说的话，1-3句；不加任何前缀说明；不暴露AI身份；用中文。"
         )
 
-        api_key = st.secrets.get("ANTHROPIC_API_KEY", "")
+        api_key = st.secrets.get("GEMINI_API_KEY", "")
         if not api_key:
-            st.error("请先在 Secrets 里设置 ANTHROPIC_API_KEY")
+            st.error("请先在 Secrets 里设置 GEMINI_API_KEY")
         else:
-            client = anthropic.Anthropic(api_key=api_key)
-            history = build_history(st.session_state.messages)
+            genai.configure(api_key=api_key)
+            model = genai.GenerativeModel(
+                model_name="gemini-1.5-flash",
+                system_instruction=system_prompt
+            )
+            history_for_gemini = []
+            for msg in st.session_state.messages[:-1]:
+                role = "user" if msg['role'] == 'user' else "model"
+                history_for_gemini.append({"role": role, "parts": [msg['content']]})
+            chat = model.start_chat(history=history_for_gemini)
             with st.spinner(""):
-                response = client.messages.create(
-                    model="claude-sonnet-4-20250514",
-                    max_tokens=300,
-                    system=system_prompt,
-                    messages=history
-                )
-                reply = response.content[0].text
+                response = chat.send_message(user_input)
+                reply = response.text
             st.session_state.messages.append({'role': 'assistant', 'content': reply})
             with st.chat_message('assistant'):
                 st.write(reply)
 else:
     st.info("在左边填写角色信息，点「开始练习」就可以开始了")
+```
