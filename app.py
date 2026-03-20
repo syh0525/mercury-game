@@ -132,7 +132,7 @@ def get_sun(month, day):
         if month == nm and day < nd: return SIGNS[si]
     return 'aries'
 
-st.title("🪐 社交练习伙伴")
+st.title("社交练习伙伴")
 st.caption("输入对方生日，解析水星星座，模拟 Ta 的思维方式和你互动练习")
 
 with st.sidebar:
@@ -228,4 +228,3 @@ if st.session_state.char_setup:
                 st.write(reply)
 else:
     st.info("在左边填写角色信息，点「开始练习」就可以开始了")
-```
