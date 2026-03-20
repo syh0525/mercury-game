@@ -234,6 +234,11 @@ if st.session_state.char_setup:
         else:
             client = anthropic.Anthropic(api_key=api_key)
             history = [{'role': m['role'], 'content': m['content']} for m in st.session_state.messages]
+# 确保第一条是 user
+if history and history[0]['role'] == 'assistant':
+    history = history[1:]
+if not history:
+    history = [{'role': 'user', 'content': '你好'}]
             with st.spinner(""):
                 response = client.messages.create(
                     model="claude-sonnet-4-20250514",
