@@ -1,16 +1,3 @@
-好！直接给你完整的新文件，你只需要全选替换就好。
-
----
-
-## 步骤
-
-1. 打开 GitHub，点开 `app.py`
-2. 点铅笔图标
-3. **Ctrl+A 全选，删掉全部内容**
-4. 把下面代码**全部复制粘贴**进去
-5. 点 **"Commit changes"** 保存
-
-```python
 # -*- coding: utf-8 -*-
 import streamlit as st
 import anthropic
@@ -237,6 +224,3 @@ if st.session_state.char_setup:
                 st.write(reply)
 else:
     st.info("在左边填写角色信息，点「开始练习」就可以开始了")
-```
-
-保存后等 1-2 分钟刷新，告诉我结果！
