@@ -1,11 +1,22 @@
+好！直接给你完整的新文件，你只需要全选替换就好。
+
+---
+
+## 步骤
+
+1. 打开 GitHub，点开 `app.py`
+2. 点铅笔图标
+3. **Ctrl+A 全选，删掉全部内容**
+4. 把下面代码**全部复制粘贴**进去
+5. 点 **"Commit changes"** 保存
+
+```python
 # -*- coding: utf-8 -*-
 import streamlit as st
 import anthropic
 
-# ── 页面设置 ──────────────────────────────────────────
 st.set_page_config(page_title="社交练习伙伴", page_icon="🪐", layout="centered")
 
-# ── 真实水星星历 (Cafe Astrology 1930–2019) ───────────
 EPH = [
 [19300102,10],[19300122,9],[19300215,10],[19300309,11],[19300326,0],[19300410,1],[19300501,2],[19300517,1],[19300614,2],[19300704,3],[19300718,4],[19300803,5],[19300826,6],[19300919,5],[19301010,6],[19301029,7],[19301117,8],[19301206,9],
 [19310211,10],[19310302,11],[19310318,0],[19310403,1],[19310611,2],[19310626,3],[19310710,4],[19310728,5],[19311004,6],[19311021,7],[19311109,8],[19311201,9],[19311220,8],
@@ -134,13 +145,11 @@ def get_sun(month, day):
         if month == nm and day < nd: return SIGNS[si]
     return 'aries'
 
-# ── 界面 ──────────────────────────────────────────────
 st.title("🪐 社交练习伙伴")
 st.caption("输入对方生日，解析水星星座，模拟 Ta 的思维方式和你互动练习")
 
-# ── 侧边栏：设置角色 ──────────────────────────────────
 with st.sidebar:
-    st.header("⚙️ 角色设定")
+    st.header("角色设定")
     char_name = st.text_input("角色名字", placeholder="给这个角色起个名字")
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -150,15 +159,13 @@ with st.sidebar:
     with col3:
         day = st.number_input("日", min_value=1, max_value=31, value=15)
     gender = st.radio("性别", ["女生", "男生", "不设定"])
-    start_btn = st.button("✨ 开始练习", use_container_width=True)
+    start_btn = st.button("开始练习", use_container_width=True)
 
-# ── Session State 初始化 ──────────────────────────────
 if 'messages' not in st.session_state:
     st.session_state.messages = []
 if 'char_setup' not in st.session_state:
     st.session_state.char_setup = None
 
-# ── 开始按钮逻辑 ──────────────────────────────────────
 if start_btn:
     if not char_name:
         char_name = "Ta"
@@ -178,55 +185,38 @@ if start_btn:
         'borderline': borderline,
     }
     st.session_state.messages = []
-    greetings = {
-        'aries': '嘿！有什么就直说吧。',
-        'taurus': '你好……慢慢来，不着急。',
-        'gemini': '哦哟你来了！最近有什么好玩的事？',
-        'cancer': '你好，很高兴见到你……你感觉怎么样？',
-        'leo': '嘿！我就知道你会来找我聊的！',
-        'virgo': '你好，请问有什么需要帮忙的？',
-        'libra': '你好呀，很高兴认识你。',
-        'scorpio': '……你好。',
-        'sagittarius': '嘿！你从哪里来？最近去哪了？',
-        'capricorn': '你好，请坐。',
-        'aquarius': '嗨，我刚在想一个问题，你觉得……算了，你好。',
-        'pisces': '……嗯……你好，感觉今天挺特别的。',
-    }
-    opening = greetings.get(mercury_sign, '你好。')
-    st.session_state.messages.append({'role': 'assistant', 'content': opening})
 
-# ── 显示星盘解析 ──────────────────────────────────────
 if st.session_state.char_setup:
     setup = st.session_state.char_setup
-    with st.expander("🔭 星盘解析", expanded=False):
+    with st.expander("星盘解析", expanded=False):
         col1, col2 = st.columns(2)
         with col1:
             st.metric("太阳星座", setup['sun_name'])
         with col2:
             st.metric("水星星座", setup['mercury_name'])
-        st.info(f"**思维与表达方式：** {setup['style']}")
-        st.success(f"💡 {setup['tip']}")
+        st.info("思维与表达方式：" + setup['style'])
+        st.success("提示：" + setup['tip'])
         if setup['borderline']:
-            st.warning("⚠️ 该日期接近水星换座，存在 ±1 星座的可能性")
+            st.warning("该日期接近水星换座，存在误差可能")
 
-# ── 对话区域 ──────────────────────────────────────────
-if st.session_state.char_setup:
-    setup = st.session_state.char_setup
     for msg in st.session_state.messages:
-        role_label = f"**{setup['name']}**" if msg['role'] == 'assistant' else "**你**"
         with st.chat_message(msg['role']):
             st.write(msg['content'])
 
-    user_input = st.chat_input(f"和 {setup['name']} 说点什么…")
+    user_input = st.chat_input("说点什么…")
     if user_input:
         st.session_state.messages.append({'role': 'user', 'content': user_input})
+        with st.chat_message('user'):
+            st.write(user_input)
 
         gender_tip = {'女生':'性别女，语气自然女性化。','男生':'性别男，语气自然男性化。','不设定':'语气自然。'}[setup['gender']]
-        system_prompt = f"""你正在扮演角色「{setup['name']}」。
-水星星座：{setup['mercury_name']}
-表达方式：{setup['style']}
-{gender_tip}
-规则：严格用水星{setup['mercury_name']}的风格说话；只输出角色说的话，1-3句；不加任何前缀说明；不暴露AI身份；用中文。"""
+        system_prompt = (
+            "你正在扮演角色「" + setup['name'] + "」。\n"
+            "水星星座：" + setup['mercury_name'] + "\n"
+            "表达方式：" + setup['style'] + "\n"
+            + gender_tip + "\n"
+            "规则：严格用水星" + setup['mercury_name'] + "的风格说话；只输出角色说的话，1-3句；不加任何前缀说明；不暴露AI身份；用中文。"
+        )
 
         api_key = st.secrets.get("ANTHROPIC_API_KEY", "")
         if not api_key:
@@ -234,11 +224,6 @@ if st.session_state.char_setup:
         else:
             client = anthropic.Anthropic(api_key=api_key)
             history = [{'role': m['role'], 'content': m['content']} for m in st.session_state.messages]
-# 确保第一条是 user
-if history and history[0]['role'] == 'assistant':
-    history = history[1:]
-if not history:
-    history = [{'role': 'user', 'content': '你好'}]
             with st.spinner(""):
                 response = client.messages.create(
                     model="claude-sonnet-4-20250514",
@@ -248,6 +233,10 @@ if not history:
                 )
                 reply = response.content[0].text
             st.session_state.messages.append({'role': 'assistant', 'content': reply})
-            st.rerun()
+            with st.chat_message('assistant'):
+                st.write(reply)
 else:
-    st.info("👈 在左边填写角色信息，点「开始练习」就可以开始了")
+    st.info("在左边填写角色信息，点「开始练习」就可以开始了")
+```
+
+保存后等 1-2 分钟刷新，告诉我结果！
